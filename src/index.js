@@ -2,8 +2,13 @@ const qr = require('qr-image');
 
 export default {
 	async fetch(request, env, ctx) {
+		const url = new URL(request.url);
+
 		if (request.method === 'POST') {
-			return generateQRCode(request);
+			return generateQRCode(await request.json());
+		} else if (request.method === 'GET' && url.searchParams.has('text')) {
+			const text = url.searchParams.get('text');
+			return generateQRCode({ text });
 		}
 
 		return new Response(landing, {
@@ -14,8 +19,7 @@ export default {
 	},
 };
 
-async function generateQRCode(request) {
-	const { text } = await request.json();
+async function generateQRCode({ text }) {
 	const headers = { 'Content-Type': 'image/png' };
 	const qr_png = qr.imageSync(text || 'NULL');
 
@@ -87,8 +91,8 @@ const landing = `
         <input type="text" id="text" placeholder="Enter text or URL" value="">
         <button onclick="generate()">Generate QR Code</button>
         <div id="qr-container">
-        	<img id="qr" src="#" alt="Generated QR Code">
-		</div>
+            <img id="qr" src="#" alt="Generated QR Code">
+        </div>
     </div>
     <script>
         function generate() {
